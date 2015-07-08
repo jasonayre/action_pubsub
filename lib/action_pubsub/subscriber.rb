@@ -1,18 +1,22 @@
 module ActionPubsub
   class Subscriber < ::Concurrent::Actor::Utils::AdHoc
-    class_attribute :concurrency, :channel, :watches
-    self.concurrency = 2
-    self.watches = {}
+    class_attribute :concurrency, :queue, :exchange_prefix, :watches
+    self.concurrency = 5
+
+    def self.inherited(subklass)
+      subklass.watches = {}
+    end
 
     def self.register_event_watcher(event_name)
-      observed_routing_key = [channel, event_name].join("/")
+      target_exchange = [exchange_prefix, event_name].join("/")
       subscriber_key = name.underscore
+      queue_key = [target_exchange, subscriber_key].join("/")
 
-      ::ActionPubsub.register_channel(observed_routing_key)
+      ::ActionPubsub.register_queue(target_exchange, subscriber_key)
 
       self.concurrency.times do |i|
-        spawn("#{subscriber_key}/#{i}") do
-          bind_subscription(observed_routing_key)
+        spawn("#{queue_key}/#{i}") do
+          bind_subscription(target_exchange, subscriber_key)
         end
       end
     end
@@ -22,9 +26,15 @@ module ActionPubsub
       register_event_watcher(event_name)
     end
 
-    def self.bind_subscription(observed_routing_key)
-      ::ActionPubsub.channel_registry[observed_routing_key] << :subscribe
+    def self.bind_subscription(target_exchange, subscriber_key)
+      puts "\n"
+      puts "\n"
+      puts ::ActionPubsub.exchange_registry[target_exchange][subscriber_key].inspect
+      puts "HERE ^"
+      puts "\n"
+      ::ActionPubsub.exchange_registry[target_exchange][subscriber_key] << :subscribe
       -> message {
+        puts message.inspect
         ::ActiveRecord::Base.connection_pool.with_connection do
           puts ::ActionPubsub.event_count.value
           sleep(1)
@@ -32,11 +42,11 @@ module ActionPubsub
           sleep(1)
           puts ::ActionPubsub.event_count.value
 
-          target_klass, target_method = ::ActionPubsub.destination_tuple_from_sender_path(envelope.sender.path)
+          self.class.watches[message["action"]].call(message["record"])
 
-          self.class.watches[target_method.to_sym].call(message["record"])
+          puts "CALLED WATCHER METHOD"
 
-          self.class.bind_subscription(observed_routing_key)
+          self.class.bind_subscription(target_exchange, subscriber_key)
         end
       }
     end

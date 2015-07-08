@@ -6,10 +6,13 @@ module ActionPubsub
 
         included do
           after_commit :publish_destroyed_event, :on => :create
+
+          routing_key = [exchange_prefix, "destroyed"].join("/")
+          ::ActionPubsub.register_exchange(routing_key)
         end
 
         def publish_destroyed_event
-          routing_key = [self.class.channel, "destroyed"].join("/")
+          routing_key = [self.class.exchange_prefix, "destroyed"].join("/")
 
           record_destroyed_event = ::ActionPubsub::Event.new(
             :topic => routing_key,

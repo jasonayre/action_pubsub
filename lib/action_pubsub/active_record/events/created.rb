@@ -7,13 +7,12 @@ module ActionPubsub
         included do
           after_commit :publish_created_event, :on => :create
 
-          routing_key = [channel, "created"].join("/")
-          ::ActionPubsub.register_channel(routing_key) unless ::ActionPubsub.channels.key?(routing_key)
+          routing_key = [exchange_prefix, "created"].join("/")
+          ::ActionPubsub.register_exchange(routing_key)
         end
 
         def publish_created_event
-          puts "CALLING PUBLISH CREATED EVENT"
-          routing_key = [self.class.channel, "created"].join("/")
+          routing_key = [self.class.exchange_prefix, "created"].join("/")
 
           record_created_event = ::ActionPubsub::Event.new(
             :topic => routing_key,

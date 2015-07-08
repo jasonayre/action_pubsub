@@ -2,6 +2,9 @@ require "action_pubsub/version"
 require "active_support/all"
 require "concurrent"
 require "active_attr"
+require "concurrent/lazy_register"
+require "concurrent/actor"
+require "concurrent/agent"
 
 module ActionPubsub
   extend ::ActiveSupport::Autoload
@@ -10,16 +13,21 @@ module ActionPubsub
   autoload :Channel
   autoload :ChannelRegistry
   autoload :Event
+  autoload :Exchange
+  autoload :ExchangeRegistry
   autoload :Publish
   autoload :Publishable
   autoload :Logging
   autoload :Subscriber
+  autoload :Queue
 
   class << self
     attr_accessor :configuration
     alias_method :config, :configuration
 
-    delegate :register_channel, :to => :'::ActionPubsub::ChannelRegistry'
+    delegate :register_queue, :to => :exchange_registry
+    delegate :register_channel, :to => :exchange_registry
+    delegate :register_exchange, :to => :exchange_registry
     delegate :channels, :to => :'::ActionPubsub::ChannelRegistry'
   end
 
@@ -27,8 +35,12 @@ module ActionPubsub
     @event_count ||= ::Concurrent::Agent.new(0)
   end
 
-  def self.channel_registry
-    ::ActionPubsub::ChannelRegistry.channels
+  def self.exchanges
+    exchange_registry
+  end
+
+  def self.exchange_registry
+    @exchange_registry ||= ::ActionPubsub::ExchangeRegistry.new
   end
 
   def self.destination_tuple_from_path(path_string)
@@ -50,7 +62,12 @@ module ActionPubsub
   end
 
   def self.publish_event(routing_key, event)
-    puts "publishing_event #{routing_key}"
-    channel_registry[routing_key] << event
+    #need to loop through exchanges and publish to them
+    #maybe there is a better way to do this?
+    exchange_hash = ActionPubsub.exchanges[routing_key].instance_variable_get("@data").value
+    queue_names = exchange_hash.keys
+    queue_names.each do |queue_name|
+      exchange_registry[routing_key][queue_name] << event
+    end
   end
 end

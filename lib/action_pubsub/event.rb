@@ -6,6 +6,7 @@ module ActionPubsub
     include ::ActiveModel::AttributeMethods
 
     attribute :id
+    attribute :action
     attribute :context
     attribute :name
     attribute :occured_at
@@ -16,6 +17,7 @@ module ActionPubsub
     #attributes have to be set for purposes of marshaling
     def initialize(topic:, record:nil, context: nil, **options)
       self[:topic] = topic
+      self[:action] = topic.split("/").pop.to_sym
       self[:name] = topic
       self[:record] = record
       self[:id] = ::SecureRandom.hex

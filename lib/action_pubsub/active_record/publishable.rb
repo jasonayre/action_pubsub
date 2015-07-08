@@ -12,7 +12,7 @@ module ActionPubsub
       included do
         include ::ActiveModel::Dirty unless ancestors.include?(::ActiveModel::Dirty)
 
-        class_attribute :channel
+        class_attribute :exchange_prefix
 
         class << self
           attr_accessor :_publishable_actions

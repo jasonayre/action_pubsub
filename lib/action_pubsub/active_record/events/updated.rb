@@ -5,7 +5,10 @@ module ActionPubsub
         extend ::ActiveSupport::Concern
 
         included do
-          after_commit :publish_updated_event, :on => :create
+          after_commit :publish_updated_event, :on => :update
+
+          routing_key = [exchange_prefix, "updated"].join("/")
+          ::ActionPubsub.register_exchange(routing_key)
         end
 
         def publish_updated_event
