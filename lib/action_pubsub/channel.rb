@@ -1,4 +1,4 @@
 module ActionPubsub
-  class Channel < ::Concurrent::Actor::Utils::Broadcast
+  class Channel < ::Concurrent::Actor::Utils::Balancer
   end
 end

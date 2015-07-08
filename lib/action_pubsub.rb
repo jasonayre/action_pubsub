@@ -20,13 +20,26 @@ module ActionPubsub
     alias_method :config, :configuration
 
     delegate :register_channel, :to => :'::ActionPubsub::ChannelRegistry'
+    delegate :channels, :to => :'::ActionPubsub::ChannelRegistry'
+  end
+
+  def self.event_count
+    @event_count ||= ::Concurrent::Agent.new(0)
   end
 
   def self.channel_registry
     ::ActionPubsub::ChannelRegistry.channels
   end
 
-  def self.destination(path_string)
+  def self.destination_tuple_from_path(path_string)
+    segs = path_string.split("/")
+    worker_index = segs.pop
+    action = segs.pop
+
+    [segs.join("/"), action, worker_index]
+  end
+
+  def self.destination_tuple_from_sender_path(path_string)
     segs = path_string.split("/")
     action = segs.pop
     [segs.join("/"), action]
