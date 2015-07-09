@@ -12,14 +12,16 @@ module ActionPubsub
         end
 
         def publish_updated_event
-          routing_key = [self.class.channel, "updated"].join("/")
+          routing_key = [self.class.exchange_prefix, "updated"].join("/")
 
           record_updated_event = ::ActionPubsub::Event.new(
             :topic => routing_key,
             :record => self
           )
 
-          ::ActionPubsub.publish_event(routing_key, record_updated_event)
+          ::ActiveRecord::Base.connection_pool.with_connection do
+            ::ActionPubsub.publish_event(routing_key, record_updated_event)
+          end
         end
       end
     end

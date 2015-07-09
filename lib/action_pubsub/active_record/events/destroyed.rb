@@ -19,7 +19,9 @@ module ActionPubsub
             :record => self
           )
 
-          ::ActionPubsub.publish_event(routing_key, record_destroyed_event)
+          ::ActiveRecord::Base.connection_pool.with_connection do
+            ::ActionPubsub.publish_event(routing_key, record_destroyed_event)
+          end
         end
       end
     end
