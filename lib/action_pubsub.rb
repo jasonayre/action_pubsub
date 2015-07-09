@@ -48,7 +48,7 @@ module ActionPubsub
   def self.publish_event(routing_key, event)
     #need to loop through exchanges and publish to them
     #maybe there is a better way to do this?
-    exchange_hash = ActionPubsub.exchanges[routing_key].instance_variable_get("@data").value
+    exchange_hash = ::ActionPubsub.exchanges[routing_key].instance_variable_get("@data").value
     queue_names = exchange_hash.keys
     queue_names.each do |queue_name|
       exchange_registry[routing_key][queue_name] << event
@@ -58,11 +58,10 @@ module ActionPubsub
   class << self
     attr_accessor :configuration
     alias_method :config, :configuration
+    alias_method :exchanges, :exchange_registry
 
     delegate :register_queue, :to => :exchange_registry
     delegate :register_channel, :to => :exchange_registry
     delegate :register_exchange, :to => :exchange_registry
-    alias_method :exchanges, :exchange_registry
-    # alias :exchanges :exchange_registry
   end
 end
