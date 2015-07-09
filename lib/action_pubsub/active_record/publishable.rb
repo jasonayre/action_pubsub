@@ -19,7 +19,6 @@ module ActionPubsub
         end
       end
 
-      ### todo: investigate why specs break if && hash is omitted
       def attributes_hash
         hash = self.as_json
         hash.merge!(:changes => previous_changes) if previous_changes && hash
@@ -28,11 +27,6 @@ module ActionPubsub
       end
 
       private
-
-      def serialized_resource
-        attributes_hash
-        # Marshal.dump(attributes_hash)
-      end
 
       module ClassMethods
         def publishable_actions(*actions)

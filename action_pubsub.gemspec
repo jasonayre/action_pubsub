@@ -30,7 +30,6 @@ Gem::Specification.new do |spec|
   spec.add_dependency "active_attr"
   spec.add_dependency "activesupport"
   spec.add_dependency "concurrent-ruby"
-  spec.add_dependency "trax_core"
   spec.add_development_dependency "bundler", "~> 1.10"
   spec.add_development_dependency 'guard', '~> 2'
   spec.add_development_dependency 'guard-rspec', '~> 4'

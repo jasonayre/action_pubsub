@@ -10,8 +10,6 @@ module ActionPubsub
   extend ::ActiveSupport::Autoload
 
   autoload :ActiveRecord
-  autoload :Channel
-  autoload :ChannelRegistry
   autoload :Event
   autoload :Exchange
   autoload :ExchangeRegistry
@@ -21,22 +19,8 @@ module ActionPubsub
   autoload :Subscriber
   autoload :Queue
 
-  class << self
-    attr_accessor :configuration
-    alias_method :config, :configuration
-
-    delegate :register_queue, :to => :exchange_registry
-    delegate :register_channel, :to => :exchange_registry
-    delegate :register_exchange, :to => :exchange_registry
-    delegate :channels, :to => :'::ActionPubsub::ChannelRegistry'
-  end
-
   def self.event_count
     @event_count ||= ::Concurrent::Agent.new(0)
-  end
-
-  def self.exchanges
-    exchange_registry
   end
 
   def self.exchange_registry
@@ -69,5 +53,16 @@ module ActionPubsub
     queue_names.each do |queue_name|
       exchange_registry[routing_key][queue_name] << event
     end
+  end
+
+  class << self
+    attr_accessor :configuration
+    alias_method :config, :configuration
+
+    delegate :register_queue, :to => :exchange_registry
+    delegate :register_channel, :to => :exchange_registry
+    delegate :register_exchange, :to => :exchange_registry
+    alias_method :exchanges, :exchange_registry
+    # alias :exchanges :exchange_registry
   end
 end

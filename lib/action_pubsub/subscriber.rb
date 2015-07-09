@@ -27,27 +27,11 @@ module ActionPubsub
     end
 
     def self.bind_subscription(target_exchange, subscriber_key)
-      puts "\n"
-      puts "\n"
-      puts ::ActionPubsub.exchange_registry[target_exchange][subscriber_key].inspect
-      puts "HERE ^"
-      puts "\n"
       ::ActionPubsub.exchange_registry[target_exchange][subscriber_key] << :subscribe
       -> message {
-        puts message.inspect
-        ::ActiveRecord::Base.connection_pool.with_connection do
-          puts ::ActionPubsub.event_count.value
-          sleep(1)
-          ::ActionPubsub.event_count << proc{|current| current + 1 }
-          sleep(1)
-          puts ::ActionPubsub.event_count.value
+        self.class.watches[message["action"]].call(message["record"])
 
-          self.class.watches[message["action"]].call(message["record"])
-
-          puts "CALLED WATCHER METHOD"
-
-          self.class.bind_subscription(target_exchange, subscriber_key)
-        end
+        self.class.bind_subscription(target_exchange, subscriber_key)
       }
     end
   end

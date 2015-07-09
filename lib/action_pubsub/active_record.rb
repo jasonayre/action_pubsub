@@ -4,5 +4,6 @@ module ActionPubsub
 
     autoload :Publishable
     autoload :Events
+    autoload :Subscriber
   end
 end
