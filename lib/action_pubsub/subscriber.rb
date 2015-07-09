@@ -1,7 +1,7 @@
 module ActionPubsub
   class Subscriber < ::Concurrent::Actor::Utils::AdHoc
     class_attribute :concurrency, :queue, :exchange_prefix, :watches
-    self.concurrency = 5
+    self.concurrency = 1
 
     def self.inherited(subklass)
       subklass.watches = {}
