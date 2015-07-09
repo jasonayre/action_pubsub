@@ -29,6 +29,10 @@ module ActionPubsub
       private
 
       module ClassMethods
+        def publish_as(_exchange_prefix)
+          self.exchange_prefix = _exchange_prefix
+        end
+
         def publishable_actions(*actions)
           @_publishable_actions = actions
 
