@@ -27,6 +27,8 @@ module ActionPubsub
     @exchange_registry ||= ::ActionPubsub::ExchangeRegistry.new
   end
 
+  @some_registry = ::Concurrent::LazyRegister.new
+
   def self.destination_tuple_from_path(path_string)
     segs = path_string.split("/")
     worker_index = segs.pop
@@ -50,6 +52,7 @@ module ActionPubsub
     #maybe there is a better way to do this?
     exchange_hash = ::ActionPubsub.exchanges[routing_key].instance_variable_get("@data").value
     queue_names = exchange_hash.keys
+
     queue_names.each do |queue_name|
       exchange_registry[routing_key][queue_name] << event
     end

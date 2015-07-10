@@ -10,6 +10,8 @@ module ActionPubsub
             reaction = self.class.subscriber.reactions[message["action"]]
 
             if self.class.subscriber.react?(message["action"], reaction, message["record"])
+              self.class.subscriber.increment_event_triggered_count!
+
               subscriber_instance = self.class.subscriber.new(message["record"])
               subscriber_instance.instance_exec(message["record"], &reaction[:block])
             end

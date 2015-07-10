@@ -2,7 +2,12 @@ module ActionPubsub
   module ActiveRecord
     class Subscriber
       class_attribute :concurrency,
+                      :event_triggered_count,
+                      :event_processed_count,
+                      :event_failed_count,
                       :observed_exchanges,
+                      :messages_received_count,
+                      :messages_processed_count,
                       :queue,
                       :reactions,
                       :subscription
@@ -20,6 +25,9 @@ module ActionPubsub
         subklass.subscription.subscriber = subklass
         subklass.reactions = {}
         subklass.observed_exchanges = ::Set.new
+        subklass.event_triggered_count = ::Concurrent::AtomicFixnum.new(0)
+        subklass.event_failed_count = ::Concurrent::AtomicFixnum.new(0)
+        subklass.event_processed_count = ::Concurrent::AtomicFixnum.new(0)
       end
 
       def self.on(event_name, **options, &block)
@@ -29,6 +37,18 @@ module ActionPubsub
         end
 
         register_reaction_to_event(event_name)
+      end
+
+      def self.increment_event_failed_count!
+        self.event_failed_count.increment
+      end
+
+      def self.increment_event_processed_count!
+        self.event_processed_count.increment
+      end
+
+      def self.increment_event_triggered_count!
+        self.event_triggered_count.increment
       end
 
       def self.subscribe_to(*exchanges)
@@ -62,7 +82,7 @@ module ActionPubsub
 
       ### Instance Methods ###
       def initialize(record, event:nil)
-        @resource = record
+        @resource = record.reload
         @event = event if event
       end
     end
