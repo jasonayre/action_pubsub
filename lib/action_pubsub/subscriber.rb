@@ -1,3 +1,4 @@
+### NOTE: Don't use this. Only the active record subscriber is working ATM.
 module ActionPubsub
   class Subscriber < ::Concurrent::Actor::Utils::AdHoc
     class_attribute :concurrency, :queue, :exchange_prefix, :watches

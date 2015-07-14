@@ -7,11 +7,11 @@ Gem::Specification.new do |spec|
   spec.name          = "action_pubsub"
   spec.version       = ActionPubsub::VERSION
   spec.authors       = ["Jason Ayre"]
-  spec.email         = ["jayre@peer60.com"]
+  spec.email         = ["jasonayre@gmail.com"]
 
-  spec.summary       = %q{Asdf.}
-  spec.description   = %q{Asdf}
-  spec.homepage      = "http://whatever.com"
+  spec.summary       = %q{In process, async, concurrent pubsub}
+  spec.description   = %q{In process, async, concurrent pubsub}
+  spec.homepage      = "http://github.com/jasonayre/action_pubsub"
   spec.license       = "MIT"
 
   # Prevent pushing this gem to RubyGems.org by setting 'allowed_push_host', or
