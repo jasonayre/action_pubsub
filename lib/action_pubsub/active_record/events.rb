@@ -3,6 +3,7 @@ module ActionPubsub
     module Events
       extend ::ActiveSupport::Autoload
 
+      autoload :Changed
       autoload :Created
       autoload :Destroyed
       autoload :Updated

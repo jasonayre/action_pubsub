@@ -14,7 +14,7 @@ module ActionPubsub
 
       self.concurrency = 1
 
-      attr_accessor :resource, :event
+      attr_accessor :resource, :current_event
 
       #the indirection here with the "subscription" dynamically created class, is for the sake
       #of making subscribers immutable and not storing instance state.
@@ -33,7 +33,7 @@ module ActionPubsub
       def self.on(event_name, **options, &block)
         reactions[event_name] = {}.tap do |hash|
           hash[:block] = block
-          hash[:conditions] = options.extract!(:if, :unless, :from, :to)
+          hash[:conditions] = options.extract!(:if, :unless)
         end
 
         register_reaction_to_event(event_name)
@@ -82,8 +82,8 @@ module ActionPubsub
 
       ### Instance Methods ###
       def initialize(record, event:nil)
-        @resource = record.reload
-        @event = event if event
+        @resource = record
+        @current_event = event if event
       end
     end
   end

@@ -10,6 +10,7 @@ module ActionPubsub
   extend ::ActiveSupport::Autoload
 
   autoload :ActiveRecord
+  autoload :Config
   autoload :Event
   autoload :Exchange
   autoload :ExchangeRegistry
@@ -18,6 +19,8 @@ module ActionPubsub
   autoload :Logging
   autoload :Subscriber
   autoload :Queue
+
+  @configuration ||= ::ActionPubsub::Config.new
 
   def self.event_count
     @event_count ||= ::Concurrent::Agent.new(0)
@@ -54,8 +57,16 @@ module ActionPubsub
     queue_names = exchange_hash.keys
 
     queue_names.each do |queue_name|
-      exchange_registry[routing_key][queue_name] << event
+      exchange_registry[routing_key][queue_name] << serialize_event(event)
     end
+  end
+
+  def self.serialize_event(event)
+    event
+  end
+
+  def self.deserialize_event(event)
+    event
   end
 
   class << self

@@ -8,6 +8,7 @@ module ActionPubsub
     attribute :id
     attribute :action
     attribute :context
+    attribute :meta
     attribute :name
     attribute :occured_at
     attribute :record
@@ -18,6 +19,7 @@ module ActionPubsub
     def initialize(topic:, record:nil, context: nil, **options)
       self[:topic] = topic
       self[:action] = topic.split("/").pop.to_sym
+      self[:meta] = options[:meta] || {}
       self[:name] = topic
       self[:record] = record
       self[:id] = ::SecureRandom.hex

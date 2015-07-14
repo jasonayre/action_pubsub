@@ -3,6 +3,7 @@ module ActionPubsub
     extend ::ActiveSupport::Autoload
 
     autoload :Events
+    autoload :OnChange
     autoload :Publishable
     autoload :Subscriber
     autoload :Subscription

@@ -4,6 +4,7 @@ module ActionPubsub
       extend ActiveSupport::Concern
 
       PUBLISHABLE_EVENTS = {
+        :changed =>   ::ActionPubsub::ActiveRecord::Events::Changed,
         :updated =>   ::ActionPubsub::ActiveRecord::Events::Updated,
         :created =>   ::ActionPubsub::ActiveRecord::Events::Created,
         :destroyed => ::ActionPubsub::ActiveRecord::Events::Destroyed
