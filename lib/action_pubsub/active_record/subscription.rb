@@ -7,18 +7,32 @@ module ActionPubsub
         ::ActionPubsub.exchange_registry[target_exchange][subscriber_key] << :subscribe
         -> message {
           ::ActiveRecord::Base.connection_pool.with_connection do
-            message = ::ActionPubsub.deserialize_event(message)
-            reaction = self.class.subscriber.reactions[message["action"]]
-            record = message["record"]
+            begin
+              message = ::ActionPubsub.deserialize_event(message)
+              reaction = self.class.subscriber.reactions[message["action"]]
+              record = message["record"]
 
-            if self.class.subscriber.react?(message["action"], reaction, record)
-              self.class.subscriber.increment_event_triggered_count!
+              if self.class.subscriber.react?(message["action"], reaction, record)
+                self.class.subscriber.increment_event_triggered_count!
+                subscriber_instance = self.class.subscriber.new(record)
+                subscriber_instance.instance_exec(record, &reaction[:block])
+              end
 
-              subscriber_instance = self.class.subscriber.new(record)
-              subscriber_instance.instance_exec(record, &reaction[:block])
+              self.class.bind_subscription(target_exchange, subscriber_key)
+            rescue => e
+              #ensure we rebind subscription regardless
+              self.class.bind_subscription(target_exchange, subscriber_key)
+              message = ::ActionPubsub.deserialize_event(message)
+
+              failure_message = ::ActionPubsub::Types::SubscriptionReactionError.new(
+                :target_exchange => target_exchange,
+                :subscriber_key => subscriber_key,
+                :error => e,
+                :message => message
+              )
+
+              ::ActionPubsub.config._on_error_block.call(failure_message) if ::ActionPubsub.config._on_error_block
             end
-
-            self.class.bind_subscription(target_exchange, subscriber_key)
           end
         }
       end

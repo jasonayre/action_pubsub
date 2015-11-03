@@ -5,6 +5,7 @@ require "active_attr"
 require "concurrent/lazy_register"
 require "concurrent/actor"
 require "concurrent/agent"
+require "trax_core"
 
 module ActionPubsub
   extend ::ActiveSupport::Autoload
@@ -19,8 +20,13 @@ module ActionPubsub
   autoload :Logging
   autoload :Subscriber
   autoload :Queue
+  autoload :Types
 
   @configuration ||= ::ActionPubsub::Config.new
+
+  def self.configure(&block)
+    block.call(config)
+  end
 
   def self.event_count
     @event_count ||= ::Concurrent::Agent.new(0)
@@ -29,8 +35,6 @@ module ActionPubsub
   def self.exchange_registry
     @exchange_registry ||= ::ActionPubsub::ExchangeRegistry.new
   end
-
-  @some_registry = ::Concurrent::LazyRegister.new
 
   def self.destination_tuple_from_path(path_string)
     segs = path_string.split("/")

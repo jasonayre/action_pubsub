@@ -7,6 +7,7 @@ module ActionPubsub
 
       self[:debug] = false
       self[:serializer] = nil
+      self[:_on_error_block] = nil
     end
 
     def debug=(val)
@@ -17,6 +18,10 @@ module ActionPubsub
       if val && val.ancestors.include?(::ActiveSupport::Concern)
         ::ActionPubsub.include(val)
       end
+    end
+
+    def on_error(&block)
+      self[:_on_error_block] = block
     end
   end
 end
