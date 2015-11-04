@@ -7,5 +7,6 @@ module ActionPubsub
     autoload :Publishable
     autoload :Subscriber
     autoload :Subscription
+    autoload :WithConnection
   end
 end

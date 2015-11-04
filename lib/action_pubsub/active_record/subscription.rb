@@ -24,7 +24,7 @@ module ActionPubsub
               self.class.bind_subscription(target_exchange, subscriber_key)
               message = ::ActionPubsub.deserialize_event(message)
 
-              failure_message = ::ActionPubsub::Types::SubscriptionReactionError.new(
+              failure_message = ::ActionPubsub::Errors::SubscriptionReactionErrorMessage.new(
                 :target_exchange => target_exchange,
                 :subscriber_key => subscriber_key,
                 :error => e,
