@@ -7,6 +7,45 @@ require "concurrent/actor"
 require "concurrent/agent"
 require "trax_core"
 
+Array.class_eval do
+  def recursive_path_permutations(current_path_segments:[])
+    segs = self.dup
+    # puts segs.inspect
+    _current = segs.shift
+    # binding.pry
+    current_path_segments << [current_path_segments.last, _current].compact
+
+    result = if segs.length > 0
+               segs.recursive_path_permutations(current_path_segments: current_path_segments)
+             else
+               current_path_segments.map!{ |segs| segs.join("/") }
+             end
+
+    result
+  end
+end
+
+String.class_eval do
+
+
+  def build_recursive_path_permutations(*args, current_path_segments:[])
+    _current = args.shift
+    current_path_segments << [current_path_segments.last, _current].compact
+
+    result = if args.length > 0
+               build_recursive_path_permutations(*args, current_path_segments: current_path_segments)
+             else
+               current_path_segments.map!{ |segs| segs.join("/") }
+             end
+
+    result
+  end
+end
+
+
+
+
+
 module ActionPubsub
   extend ::ActiveSupport::Autoload
 
@@ -19,6 +58,9 @@ module ActionPubsub
   autoload :Publishable
   autoload :Logging
   autoload :Subscriber
+  autoload :Registry
+  autoload :Routes
+  autoload :Route
   autoload :Queue
   autoload :Types
 
