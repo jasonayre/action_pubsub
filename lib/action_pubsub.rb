@@ -15,8 +15,7 @@ module ActionPubsub
   autoload :Channels
   autoload :Errors
   autoload :Event
-  autoload :Exchange
-  autoload :ExchangeRegistry
+  autoload :Exchanges
   autoload :HasSubscriptions
   autoload :Publish
   autoload :Publishable
@@ -24,8 +23,6 @@ module ActionPubsub
   autoload :Subscriber
   autoload :Subscriptions
   autoload :Registry
-  autoload :Routes
-  autoload :Route
   autoload :Queue
 
   @configuration ||= ::ActionPubsub::Config.new
@@ -46,8 +43,8 @@ module ActionPubsub
     @event_count ||= ::Concurrent::Agent.new(0)
   end
 
-  def self.exchange_registry
-    @exchange_registry ||= ::ActionPubsub::ExchangeRegistry.new
+  def self.exchanges
+    @exchanges ||= ::ActionPubsub::Exchanges.new
   end
 
   def self.destination_tuple_from_path(path_string)
@@ -89,8 +86,8 @@ module ActionPubsub
   def self.publish_event(routing_key, event)
     #need to loop through exchanges and publish to them
     #maybe there is a better way to do this?
-    ::ActionPubsub.exchanges[routing_key].keys.each do |queue_name|
-      exchange_registry[routing_key][queue_name] << serialize_event(event)
+    exchanges[routing_key].keys.each do |queue_name|
+      exchanges[routing_key][queue_name] << serialize_event(event)
     end
   end
 
@@ -113,11 +110,10 @@ module ActionPubsub
   class << self
     attr_accessor :configuration
     alias_method :config, :configuration
-    alias_method :exchanges, :exchange_registry
 
     delegate :[], :to => :channels
-    delegate :register_queue, :to => :exchange_registry
-    delegate :register_channel, :to => :exchange_registry
-    delegate :register_exchange, :to => :exchange_registry
+    delegate :register_queue, :to => :exchanges
+    delegate :register_channel, :to => :exchanges
+    delegate :register_exchange, :to => :exchanges
   end
 end

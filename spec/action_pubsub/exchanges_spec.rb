@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe ::ActionPubsub::ExchangeRegistry do
+describe ::ActionPubsub::Exchanges do
   subject { described_class.new }
 
   it "register_exchange" do

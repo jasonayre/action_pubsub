@@ -5,7 +5,15 @@ describe ActionPubsub do
     expect(ActionPubsub::VERSION).not_to be nil
   end
 
-  it ".exchange_registry" do
-    described_class.exchange_registry.should be_a(::Concurrent::LazyRegister)
+  it ".exchanges" do
+    described_class.exchanges.should be_a(::ActionPubsub::Registry)
+  end
+
+  it ".channels" do
+    described_class.channels.should be_a(::ActionPubsub::Registry)
+  end
+
+  it ".subscriptions" do
+    described_class.subscriptions.should be_a(::ActionPubsub::Registry)
   end
 end

@@ -1,5 +1,5 @@
 module ActionPubsub
-  class ExchangeRegistry < ::ActionPubsub::Registry
+  class Exchanges < ::ActionPubsub::Registry
     def register_queue(exchange_name, subscriber_name)
       register_exchange(exchange_name) unless key?(exchange_name)
       queue_name = [exchange_name, subscriber_name].join("/")
@@ -7,7 +7,7 @@ module ActionPubsub
     end
 
     def register_exchange(exchange_name)
-      add(exchange_name) { ::ActionPubsub::ExchangeRegistry.new }
+      add(exchange_name) { ::ActionPubsub::Exchanges.new }
     end
   end
 end
