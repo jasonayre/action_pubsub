@@ -66,7 +66,7 @@ module ActionPubsub
       target_channel = ::ActionPubsub.channels[path]
       subscription_path = "#{path}:#{as || SecureRandom.uuid}"
 
-      ::ActionPubsub.subscriptions[subscription_path] = ::Concurrent::Actor::Utils::AdHoc.spawn(subscription_path) do
+      ::ActionPubsub.subscriptions[subscription_path] ||= ::Concurrent::Actor::Utils::AdHoc.spawn(subscription_path) do
         target_channel << :subscribe
         -> message {
           block.call(message)
