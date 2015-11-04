@@ -1,9 +1,22 @@
+require 'trax_core'
+
 module ActionPubsub
   class Registry
     @registry = ::ActionPubsub::Route.spawn('/')
 
     class << self
       attr_accessor :registry
+    end
+
+    def self.register(path)
+      paths = ::Trax::Core::PathPermutations.new(*path.split('/'))
+
+
+      paths.each do |path|
+        puts path.classify
+      end
+      # puts paths
+      paths
     end
 
     def self.add(path)
@@ -21,17 +34,18 @@ module ActionPubsub
       self[exchange_name].add(subscriber_name) { ::ActionPubsub::Queue.spawn(queue_name) }
     end
 
-    def register_path(*args, root:nil)
-      root = args.shift unless root
-      unless key?(root)
-      root_queue = self[root]
-    end
+    # def register_path(*args, root:nil)
+    #   root = args.shift unless root
+    #
+    #   root_queue = self[root]
+    # end
 
     def register(path)
       segs = path.split('/')
       root_path = segs.shift
       segs.repeated_permutations(root_path)
     end
+
 
     # def register_exchange(exchange_name)
     #   add(exchange_name) {
