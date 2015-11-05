@@ -1,10 +1,14 @@
 require 'spec_helper'
 
 describe ::ActionPubsub::Exchanges do
-  subject { described_class.new }
+  subject do
+    exchanges = described_class.new
+    exchanges.register_exchange("blog/posts")
+    exchanges
+  end
 
-  it "register_exchange" do
-    subject.register_exchange("blog/posts")
-    subject.key?("blog/posts").should eq true
+  describe "#register_exchange" do
+    it { expect(subject.key?("blog/posts")).to eq true }
+    it { expect(subject["blog/posts"]).to be_a(described_class) }
   end
 end

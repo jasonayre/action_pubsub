@@ -4,7 +4,7 @@ module ActionPubsub
       class_attribute :subscriber
 
       def self.bind_subscription(target_exchange, subscriber_key)
-        ::ActionPubsub.exchange_registry[target_exchange][subscriber_key] << :subscribe
+        ::ActionPubsub.exchanges[target_exchange][subscriber_key] << :subscribe
         -> message {
           ::ActiveRecord::Base.connection_pool.with_connection do
             begin
@@ -21,7 +21,7 @@ module ActionPubsub
               self.class.bind_subscription(target_exchange, subscriber_key)
             rescue => e
               #ensure we rebind subscription regardless
-              self.class.bind_subscription(target_exchange, subscriber_key)
+              self.class.bind_subscription(target_exchange, subscriber_key) unless message.is_a?(Symbol)
               message = ::ActionPubsub.deserialize_event(message)
 
               failure_message = ::ActionPubsub::Errors::SubscriptionReactionErrorMessage.new(

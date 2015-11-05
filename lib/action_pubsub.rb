@@ -10,6 +10,8 @@ module ActionPubsub
   extend ::ActiveSupport::Autoload
 
   autoload :ActiveRecord
+  autoload :Actors
+  autoload :Balancer
   autoload :Config
   autoload :Channel
   autoload :Channels
@@ -37,6 +39,15 @@ module ActionPubsub
 
   def self.channel?(channel_path)
     channels.key?(channel_path)
+  end
+
+  def self.disable_all!
+    configure do |config|
+      config.disabled = true
+    end
+
+    subscriptions.all.map{ |_subscription| _subscription << :terminate! }
+    self
   end
 
   def self.event_count
@@ -97,6 +108,10 @@ module ActionPubsub
 
   def self.subscriptions
     @subscriptions ||= ::ActionPubsub::Subscriptions.new
+  end
+
+  def self.silent_dead_letter_handler
+    @silent_dead_letter_handler ||= ::ActionPubsub::Actors::SilentDeadLetterHandler.spawn('action_pubsub/silent_dead_letter_handler')
   end
 
   def self.subscription?(path)
