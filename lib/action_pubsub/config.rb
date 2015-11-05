@@ -6,12 +6,17 @@ module ActionPubsub
       super(*args)
 
       self[:debug] = false
+      self[:disabled] = false
       self[:serializer] = nil
       self[:_on_error_block] = nil
     end
 
     def debug=(val)
       ::Concurrent.use_stdlib_logger(Logger::DEBUG) if val
+    end
+
+    def disabled?
+      self[:disabled]
     end
 
     def serializer=(val)

@@ -30,6 +30,9 @@ module ActionPubsub
         subklass.event_processed_count = ::Concurrent::AtomicFixnum.new(0)
       end
 
+      def self.disable_all!
+      end
+
       def self.on(event_name, **options, &block)
         reactions[event_name] = {}.tap do |hash|
           hash[:block] = block
@@ -69,11 +72,11 @@ module ActionPubsub
           target_exchange = [exchange_prefix, event_name].join("/")
           subscriber_key = name.underscore
           queue_key = [target_exchange, subscriber_key].join("/")
-
           ::ActionPubsub.register_queue(target_exchange, subscriber_key)
 
           self.concurrency.times do |i|
-            self.subscription.spawn("#{queue_key}/#{i}") do
+            queue_address = "#{queue_key}/#{i}"
+            ::ActionPubsub.subscriptions[queue_address] ||= self.subscription.spawn(queue_address) do
               self.subscription.bind_subscription(target_exchange, subscriber_key)
             end
           end

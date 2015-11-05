@@ -1,4 +1,4 @@
 module ActionPubsub
-  class Queue < ::Concurrent::Actor::Utils::Balancer
+  class Queue < ::ActionPubsub::Balancer
   end
 end

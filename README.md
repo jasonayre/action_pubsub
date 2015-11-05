@@ -2,7 +2,7 @@
 
 In process, concurrent observers, loosely modeled after rabbitmq
 
-## Example
+## Active Record Example
 
 Lets say we have a blog app, and our posts have comments enabled on a case by case basis.
 When someone leaves a new comment, we want to blast out an email to everyone who
@@ -41,6 +41,101 @@ module Blogger
 end
 ```
 
+## Non Active Record Subscribers
+
+As of 0.2.0, we can make anything subscribable, and publish to specific non "exchange" queues.
+
+``` ruby
+module Blogger
+  class Comment < ::ActiveRecord::Base
+    after_create :publish_after_create, :publish_after_save
+
+    def publish_after_create
+      ::ActionPubsub.publish('blogger/comment/created')
+    end
+
+    def publish_after_save
+      ::ActionPubsub.publish('blogger/comment/saved')
+    end    
+  end
+end
+```
+
+``` ruby
+class CommentSentimentAnalyzer
+  include ::ActionPubsub::HasSubscriptions
+  include ::ActionPubsub::ActiveRecord::WithConnection
+
+  class_attribute :sentiment_scores
+  self.sentiment_scores = []
+
+  on 'blogger/comment/created' do |record|
+    result = perform_sentiment_analysis(record)
+
+    if(result.is_beligerent?)
+      record.status = :hidden
+      record.sentiment_score = result.value
+    else
+      record.sentiment_score = result.value
+    end
+
+    self.class.sentiment_scores << record.sentiment_score
+
+    record.save
+  end
+
+  def perform_sentiment_analysis(record)
+    ##hit some 3rd party sentiment analysis api
+    return record
+  end
+
+  def average_sentiment
+    sentiment_scores.calculate_average
+  end
+end
+```
+
+Notes:
+1. The cool thing about the above, is not only is it a really lean, loosely coupled subscription, but its subscribes *asynchronously*, so we can call the 3rd party sentiment analysis api
+directly from our subscriber without worrying about blocking the main thread.
+
+2. the use of
+``` ruby
+include ::ActionPubsub::ActiveRecord::WithConnection
+```
+
+This ensures that the active record connection gets checked out and checked back into the pool, else youll run out of connections quickly. If you are not doing anything with active record, dont include it. If you are doing ANYTHING with active record (running a query or anything), make sure to include it, or wrap every on action in a connection checkout block, i.e.
+
+``` ruby
+::ActiveRecord::Base.connection_pool.with_connection
+```
+
+### Alternative Methods of Publish/Subscription
+
+``` ruby
+::ActionPubsub.publish('blogger/comment/created', {:my => :comment})
+
+#accessing and publishing to the channel directly
+::ActionPubsub['blogger/comment/created'] << {:my => :comment}
+
+#subscribing to channel directly
+::ActionPubsub.on('blogger/comment/created') do |comment|
+  puts comment.inspect
+end
+
+#multiple subscriptions per channel are allowed as well
+::ActionPubsub.on('blogger/comment/created') do |comment|
+  puts "do something else with comment #{comment}"
+end
+
+#as well as unique keyed subscriptions by name, i.e.
+::ActionPubsub.on('blogger/comment/created', :as => '/user/1/blogger/comment/created') do |comment|
+  puts "do something specific to user 1 with comment"
+end
+
+#will ensure that the existing subscription does not get duplicated.
+```
+
 ### What is the advantage of this pattern?
 
 The advantage is it makes your app incredibly reactive. Rather than have to fatten
@@ -52,12 +147,10 @@ application, and do nothing but react to the events occurring within the system.
 
 ### Callbacks
 
-Sure, we could use callbacks, but do we care about any of that if the record has
-not been commited to the database? (No we should not). Unless you use
-after_commit :on => :create, then your callbacks will attempt to run even if record hasn't been committed,
-unless at some point an error or false was returned.
-
-So as a best practice, we only broadcast the creation after it's been commited.
+The ActiveRecord callbacks from the ActionPubsub::ActiveRecord module, are only fired after_commit.
+If for some reason that's a problem, you probably don't want a subscriber to begin with,
+and should stick with standard callbacks. Meaning, subscribers are primarily intended to perform duties
+relevant to the model, but that do not change the model itself.
 
 This also allows for complex chains of events to occur, with no knowledge of each other,
 but that do their one job, and do it well. If that subscriber happens to create a new record,
