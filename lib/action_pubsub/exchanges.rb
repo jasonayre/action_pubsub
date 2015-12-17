@@ -2,6 +2,8 @@ module ActionPubsub
   class Exchanges < ::ActionPubsub::Registry
     def register_queue(exchange_name, subscriber_name)
       queue_name = [exchange_name, subscriber_name].join("/")
+      puts "REGISTERING QUEUE FOR"
+      puts "#{queue_name}"
       self[exchange_name].add(subscriber_name) { ::ActionPubsub::Queue.spawn(queue_name) }
     end
 

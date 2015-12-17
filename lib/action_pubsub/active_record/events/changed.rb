@@ -20,7 +20,11 @@ module ActionPubsub
           )
 
           ::ActiveRecord::Base.connection_pool.with_connection do
+            # binding.pry
+            puts ""
+            puts "PUBLISHING CHANGED"
             ::ActionPubsub.publish_event(routing_key, record_changed_event)
+            puts ""
           end
         end
       end

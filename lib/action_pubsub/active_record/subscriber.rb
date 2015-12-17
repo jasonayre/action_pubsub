@@ -76,7 +76,9 @@ module ActionPubsub
 
           self.concurrency.times do |i|
             queue_address = "#{queue_key}/#{i}"
+            puts "REGISTERING REACTION TO EVENT"
             ::ActionPubsub.subscriptions[queue_address] ||= self.subscription.spawn(queue_address) do
+              puts "REGISTERING #{queue_address}"
               self.subscription.bind_subscription(target_exchange, subscriber_key)
             end
           end
